@@ -10,7 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/customSupabaseClient';
+import { requireAuth, supabase } from '@/lib/customSupabaseClient';
 import {
   Dialog,
   DialogContent,
@@ -421,10 +421,21 @@ const FaitsDivers = () => {
   const [canCreate, setCanCreate] = useState(false);
 
   useEffect(() => {
+    (async () => {
+      try {
+        await requireAuth(navigate);
+      } catch {
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (user) {
       canUserAccess(user, 'faits_divers', 'create').then(setCanCreate);
     }
   }, [user]);
+
 
   const fetchNews = useCallback(async () => {
     setLoading(true);

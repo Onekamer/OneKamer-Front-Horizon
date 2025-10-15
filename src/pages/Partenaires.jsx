@@ -2,17 +2,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { MapPin, Phone, Mail, ArrowLeft, Plus, Loader2, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Star, Share2, MessageSquare, Mail, ArrowLeft, Lock } from 'lucide-react';
-import { canUserAccess } from '@/lib/accessControl';
-import FavoriteButton from '@/components/FavoriteButton';
+import { requireAuth, supabase } from '@/lib/customSupabaseClient';  // ✅ Correction ici
+import { useAuth } from '@/contexts/SupabaseAuthContext';
 import MediaDisplay from '@/components/MediaDisplay';
+import FavoriteButton from '@/components/FavoriteButton';
+import { canUserAccess } from '@/lib/accessControl';
+
 
 const PartenaireDetail = ({ partenaire, onBack, onRecommander }) => {
   const handleShare = () => {
@@ -94,10 +95,21 @@ const Partenaires = () => {
   const [canCreate, setCanCreate] = useState(false);
 
   useEffect(() => {
+    (async () => {
+      try {
+        await requireAuth(navigate);
+      } catch {
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
     if (user) {
       canUserAccess(user, 'partenaires', 'create').then(setCanCreate);
     }
   }, [user]);
+
 
   const fetchPartenaires = useCallback(async () => {
     setLoading(true);

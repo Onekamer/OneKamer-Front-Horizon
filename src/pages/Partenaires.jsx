@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Phone, Mail, ArrowLeft, Plus, Loader2, Trash2 } from 'lucide-react';
+import { MapPin, Phone, Mail, ArrowLeft, Plus, Loader2, Trash2, Star, MessageSquare, Share2, Lock, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { requireAuth, supabase } from '@/lib/customSupabaseClient';  // ✅ Correction ici

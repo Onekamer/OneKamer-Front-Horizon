@@ -231,7 +231,7 @@ const Rencontre = () => {
   const handleAction = async (likedProfileId, action) => {
     if (!myProfile) return;
 
-    if (!canUser) {
+    if (!user) {
       toast({ title: "Connexion requise", description: "Connectez vous pour interagir.", variant: "destructive" });
       navigate('/auth');
       return;

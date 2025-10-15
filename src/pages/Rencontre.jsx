@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, X, MapPin, Eye, ArrowLeft, Briefcase, User, Ruler, Weight, Users, Film, Tv, BookOpen, Music, Cigarette, GlassWater, Baby, Paintbrush, Gem, Mail, SlidersHorizontal, Loader2, UserCircle2, Sparkles, Languages, Code, Award, GraduationCap } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';

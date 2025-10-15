@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react';
     import { Search, Share2, MapPin, ArrowLeft, Phone, MessageSquare, Mail, Plus, Loader2, Trash2, Euro } from 'lucide-react';
     import { useToast } from '@/components/ui/use-toast';
     import { useNavigate } from 'react-router-dom';
-    import { supabase } from '@/lib/customSupabaseClient';
+    import { requireAuth, supabase } from '@/lib/customSupabaseClient'
     import { useAuth } from '@/contexts/SupabaseAuthContext';
     import MediaDisplay from '@/components/MediaDisplay';
     import FavoriteButton from '@/components/FavoriteButton';
@@ -199,23 +199,34 @@ import React, { useState, useEffect, useCallback } from 'react';
     };
 
 
-    const Annonces = () => {
-      const [annonces, setAnnonces] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [searchTerm, setSearchTerm] = useState('');
-      const [selectedAnnonce, setSelectedAnnonce] = useState(null);
-      const navigate = useNavigate();
-      const { user } = useAuth();
-      const { toast } = useToast();
-      const [canCreateAd, setCanCreateAd] = useState(false);
+const Annonces = () => {
+  const [annonces, setAnnonces] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAnnonce, setSelectedAnnonce] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [canCreateAd, setCanCreateAd] = useState(false);
 
-      useEffect(() => {
-        if(user) {
-          canUserAccess(user, "annonces", "create").then(setCanCreateAd);
-        } else {
-          setCanCreateAd(false);
-        }
-      }, [user]);
+  useEffect(() => {
+    (async () => {
+      try {
+        await requireAuth(navigate);
+      } catch {
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      canUserAccess(user, "annonces", "create").then(setCanCreateAd);
+    } else {
+      setCanCreateAd(false);
+    }
+  }, [user]);
+
 
       const fetchAnnonces = useCallback(async () => {
         setLoading(true);

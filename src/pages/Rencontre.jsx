@@ -231,9 +231,9 @@ const Rencontre = () => {
   const handleAction = async (likedProfileId, action) => {
     if (!myProfile) return;
 
-    if (!canInteract) {
-      toast({ title: "Accès VIP requis", description: "Passez VIP pour interagir avec les profils.", variant: "destructive" });
-      navigate('/forfaits');
+    if (!canUser) {
+      toast({ title: "Connexion requise", description: "Connectez vous pour interagir.", variant: "destructive" });
+      navigate('/auth');
       return;
     }
 

@@ -160,12 +160,32 @@ const Rencontre = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [canInteract, setCanInteract] = useState(false);
+  const [canView, setCanView] = useState(false); // ✅ nouveau
 
+  const { toast } = useToast();
+
+  // ✅ 1. Vérification de l'authentification
+  useEffect(() => {
+    (async () => {
+      try {
+        await requireAuth(navigate);
+      } catch {
+        return;
+      }
+    })();
+  }, []);
+
+  // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
     if (user) {
       canUserAccess(user, 'rencontre', 'interact').then(setCanInteract);
+      canUserAccess(user, 'rencontre', 'view').then(setCanView);
+    } else {
+      setCanInteract(false);
+      setCanView(false);
     }
   }, [user]);
+
 
   const fetchMyProfile = useCallback(async () => {
     if (!user) {
@@ -229,23 +249,47 @@ const Rencontre = () => {
   }, [myProfile, fetchProfiles]);
 
   const handleAction = async (likedProfileId, action) => {
-    if (!myProfile) return;
+  // ✅ Vérifie si l’utilisateur est connecté
+  if (!user) {
+    toast({
+      title: "Connexion requise",
+      description: "Connectez-vous pour interagir.",
+      variant: "destructive",
+    });
+    navigate('/auth');
+    return;
+  }
 
-    if (!user) {
-      toast({ title: "Connexion requise", description: "Connectez vous pour interagir.", variant: "destructive" });
-      navigate('/auth');
-      return;
-    }
+  // ✅ Vérifie si le plan autorise les interactions (VIP/Admin)
+  if (!canInteract) {
+    toast({
+      title: "Accès réservé",
+      description: "Cette action est réservée aux membres VIP.",
+      variant: "destructive",
+    });
+    return;
+  }
 
-    if (action === 'like') {
-      const { error } = await supabase.from('rencontres_likes').insert({ liker_id: myProfile.id, liked_id: likedProfileId });
-      if (error && error.code !== '23505') { // 23505 is unique_violation
-        toast({ title: 'Erreur', description: 'Le like n\'a pas pu être enregistré.', variant: 'destructive' });
-      }
+  if (!myProfile) return;
+
+  if (action === 'like') {
+    const { error } = await supabase
+      .from('rencontres_likes')
+      .insert({ liker_id: myProfile.id, liked_id: likedProfileId });
+
+    if (error && error.code !== '23505') { // 23505 = unique_violation
+      toast({
+        title: 'Erreur',
+        description: "Le like n'a pas pu être enregistré.",
+        variant: 'destructive',
+      });
     }
-    setView('card');
-    setCurrentIndex((prev) => prev + 1);
-  };
+  }
+
+  setView('card');
+  setCurrentIndex((prev) => prev + 1);
+};
+
 
   useEffect(() => {
     if (!myProfile) return;
@@ -272,7 +316,7 @@ const Rencontre = () => {
 
 
   const currentProfile = profiles[currentIndex];
-
+  
   if (loading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-8 w-8 animate-spin text-green-500" /></div>;
   }

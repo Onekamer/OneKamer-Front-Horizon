@@ -1,17 +1,18 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
-    import { Helmet } from 'react-helmet';
-    import { motion, AnimatePresence } from 'framer-motion';
-    import { Card, CardContent } from '@/components/ui/card';
-    import { Button } from '@/components/ui/button';
-    import { Calendar, MapPin, Clock, Banknote, Share2, ArrowLeft, Ticket, Plus, Loader2, Trash2 } from 'lucide-react';
-    import { useToast } from '@/components/ui/use-toast';
-    import { useNavigate } from 'react-router-dom';
-    import { supabase } from '@/lib/customSupabaseClient';
-    import { useAuth } from '@/contexts/SupabaseAuthContext';
-    import MediaDisplay from '@/components/MediaDisplay';
-    import FavoriteButton from '@/components/FavoriteButton';
-    import { canUserAccess } from '@/lib/accessControl';
+  import { Helmet } from 'react-helmet';
+  import { motion, AnimatePresence } from 'framer-motion';
+  import { Card, CardContent } from '@/components/ui/card';
+  import { Button } from '@/components/ui/button';
+  import { Calendar, MapPin, Clock, Banknote, Share2, ArrowLeft, Ticket, Plus, Loader2, Trash2 } from 'lucide-react';
+  import { useToast } from '@/components/ui/use-toast';
+  import { useNavigate } from 'react-router-dom';
+  import { requireAuth, supabase } from '@/lib/customSupabaseClient';  // ✅ Correction ici
+  import { useAuth } from '@/contexts/SupabaseAuthContext';
+  import MediaDisplay from '@/components/MediaDisplay';
+  import FavoriteButton from '@/components/FavoriteButton';
+  import { canUserAccess } from '@/lib/accessControl';
+
 
     const formatPrice = (price, devise) => {
         const priceNumber = parseFloat(price);
@@ -212,22 +213,33 @@ import React, { useState, useEffect, useCallback } from 'react';
         );
     };
 
-    const Evenements = () => {
-      const [events, setEvents] = useState([]);
-      const [loading, setLoading] = useState(true);
-      const [selectedEvent, setSelectedEvent] = useState(null);
-      const navigate = useNavigate();
-      const { user } = useAuth();
-      const { toast } = useToast();
-      const [canCreateEvent, setCanCreateEvent] = useState(false);
+const Evenements = () => {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [canCreateEvent, setCanCreateEvent] = useState(false);
 
-      useEffect(() => {
-        if (user) {
-          canUserAccess(user, "evenements", "create").then(setCanCreateEvent);
-        } else {
-          setCanCreateEvent(false);
-        }
-      }, [user]);
+  useEffect(() => {
+    (async () => {
+      try {
+        await requireAuth(navigate);
+      } catch {
+        return;
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (user) {
+      canUserAccess(user, "evenements", "create").then(setCanCreateEvent);
+    } else {
+      setCanCreateEvent(false);
+    }
+  }, [user]);
+
 
       const fetchEvents = useCallback(async () => {
         setLoading(true);

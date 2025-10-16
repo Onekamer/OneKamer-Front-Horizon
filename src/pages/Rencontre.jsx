@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +21,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from "@/components/ui/slider"
 import RencontreProfil from './rencontre/RencontreProfil';
 import { canUserAccess } from '@/lib/accessControl';
+
 
 const FiltersDialog = ({ filters, setFilters, onApply }) => {
   const [localFilters, setLocalFilters] = useState(filters);
@@ -140,6 +142,7 @@ const ArrayDetailItem = ({ icon: Icon, label, values }) => (
     </div>
 );
 
+
 const Rencontre = () => {
   const { user } = useAuth();
   const [profiles, setProfiles] = useState([]);
@@ -157,9 +160,11 @@ const Rencontre = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [canInteract, setCanInteract] = useState(false);
-  const [canView, setCanView] = useState(false);
+  const [canView, setCanView] = useState(false); // ✅ nouveau
+
   const { toast } = useToast();
 
+  // ✅ 1. Vérification de l'authentification
   useEffect(() => {
     (async () => {
       try {
@@ -170,16 +175,17 @@ const Rencontre = () => {
     })();
   }, []);
 
-  // ✅ Correctif : utiliser "create" à la place de "interact" pour autoriser les Free/Standard à créer
+  // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
     if (user) {
-      canUserAccess(user, 'rencontre', 'create').then(setCanInteract);  // changed from 'interact' to 'create' to allow Free users to create
+      canUserAccess(user, 'rencontre', 'create').then(setCanInteract);
       canUserAccess(user, 'rencontre', 'view').then(setCanView);
     } else {
       setCanInteract(false);
       setCanView(false);
     }
   }, [user]);
+
 
   const fetchMyProfile = useCallback(async () => {
     if (!user) {
@@ -243,44 +249,47 @@ const Rencontre = () => {
   }, [myProfile, fetchProfiles]);
 
   const handleAction = async (likedProfileId, action) => {
-    if (!user) {
+  // ✅ Vérifie si l’utilisateur est connecté
+  if (!user) {
+    toast({
+      title: "Connexion requise",
+      description: "Connectez-vous pour interagir.",
+      variant: "destructive",
+    });
+    navigate('/auth');
+    return;
+  }
+
+  // ✅ Vérifie si le plan autorise les interactions (VIP/Admin)
+  if (!canInteract) {
+    toast({
+      title: "Accès réservé",
+      description: "Cette action est réservée aux membres VIP.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  if (!myProfile) return;
+
+  if (action === 'like') {
+    const { error } = await supabase
+      .from('rencontres_likes')
+      .insert({ liker_id: myProfile.id, liked_id: likedProfileId });
+
+    if (error && error.code !== '23505') { // 23505 = unique_violation
       toast({
-        title: "Connexion requise",
-        description: "Connectez-vous pour interagir.",
-        variant: "destructive",
+        title: 'Erreur',
+        description: "Le like n'a pas pu être enregistré.",
+        variant: 'destructive',
       });
-      navigate('/auth');
-      return;
     }
+  }
 
-    if (!canInteract) {
-      toast({
-        title: "Accès réservé",
-        description: "Cette action est réservée aux membres VIP.",
-        variant: "destructive",
-      });
-      return;
-    }
+  setView('card');
+  setCurrentIndex((prev) => prev + 1);
+};
 
-    if (!myProfile) return;
-
-    if (action === 'like') {
-      const { error } = await supabase
-        .from('rencontres_likes')
-        .insert({ liker_id: myProfile.id, liked_id: likedProfileId });
-
-      if (error && error.code !== '23505') {
-        toast({
-          title: 'Erreur',
-          description: "Le like n'a pas pu être enregistré.",
-          variant: 'destructive',
-        });
-      }
-    }
-
-    setView('card');
-    setCurrentIndex((prev) => prev + 1);
-  };
 
   useEffect(() => {
     if (!myProfile) return;
@@ -305,6 +314,7 @@ const Rencontre = () => {
     return () => supabase.removeChannel(channel);
   }, [myProfile, toast]);
 
+
   const currentProfile = profiles[currentIndex];
   
   if (loading) {
@@ -315,14 +325,18 @@ const Rencontre = () => {
      return <div className="text-center p-8">Veuillez vous connecter pour accéder aux rencontres.</div>
   }
   
-  // ✅ n’autoriser la création que si l’utilisateur peut voir la section
   if (!myProfile && canView) {
-    return <RencontreProfil />;
-  }
+  return <RencontreProfil />;
+}
 
-  if (!canView) {
-    return <div className="text-center p-8">Accès restreint — cette fonctionnalité nécessite une connexion.</div>;
-  }
+if (!canView) {
+  return (
+    <div className="text-center p-8">
+      Accès restreint — cette fonctionnalité nécessite une connexion.
+    </div>
+  )
+}
+
 
   return (
     <>
@@ -341,19 +355,102 @@ const Rencontre = () => {
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
             >
-              {/* CONTENU ORIGINAL INCHANGÉ (cartes, UI, actions, etc.) */}
-              {/* ... */}
+              <div className="flex items-center justify-between mb-4">
+                 <h1 className="text-3xl font-bold bg-gradient-to-r from-green-500 to-emerald-600 text-transparent bg-clip-text">Rencontres</h1>
+                 <div className="flex items-center gap-2">
+                     <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/rencontre/profil')}><UserCircle2 className="h-6 w-6 text-gray-600" /></Button>
+                     <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/rencontre/messages')}><Mail className="h-6 w-6 text-gray-600" /></Button>
+                     <Dialog open={showFilters} onOpenChange={setShowFilters}>
+                        <DialogTrigger asChild>
+                           <Button variant="ghost" size="icon" className="rounded-full"><SlidersHorizontal className="h-6 w-6 text-gray-600" /></Button>
+                        </DialogTrigger>
+                        <FiltersDialog filters={filters} setFilters={setFilters} onApply={() => { fetchProfiles(); setShowFilters(false); }} />
+                     </Dialog>
+                 </div>
+              </div>
+
+              {!currentProfile ? (
+                 <div className="text-center p-8 h-[70vh] flex flex-col justify-center items-center gap-4 bg-white rounded-2xl shadow-lg">
+                    <Users className="h-16 w-16 text-gray-300" />
+                    <p className="font-semibold text-xl">Plus de profils pour le moment</p>
+                    <p className="text-gray-500">Revenez plus tard ou ajustez vos filtres.</p>
+                 </div>
+              ) : (
+                <Card className="overflow-hidden shadow-lg rounded-2xl">
+                  <div className="relative h-[55vh] max-h-[450px]">
+                    <MediaDisplay bucket="rencontres" path={currentProfile.image_url} alt={currentProfile.name} className="w-full h-full object-cover" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 text-white">
+                      <h2 className="text-3xl font-bold">{currentProfile.name?.split(' ')[0]}, {currentProfile.age}</h2>
+                      <div className="flex items-center gap-2 text-sm"><MapPin className="h-4 w-4" /><span>{currentProfile.ville?.nom || currentProfile.city}</span></div>
+                    </div>
+                  </div>
+                  <CardContent className="p-6 space-y-4">
+                    <p className="text-gray-700 h-10 overflow-hidden">{currentProfile.bio}</p>
+                    <div className="flex justify-around items-center pt-4">
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleAction(currentProfile.id, 'pass')} className="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-md"><X className="h-8 w-8 text-gray-500" /></motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleAction(currentProfile.id, 'like')} className="w-20 h-20 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg"><Heart className="h-10 w-10 text-white" fill="white" /></motion.button>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => setView('detail')} className="w-16 h-16 rounded-full flex items-center justify-center bg-white shadow-md"><Eye className="h-8 w-8 text-gray-500" /></motion.button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </motion.div>
           ) : (
             <motion.div
-              key="list"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.2 }}
+              key={`detail-${currentProfile.id}`}
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="bg-white rounded-2xl shadow-lg p-6 space-y-6"
             >
-              {/* LISTE — CONTENU ORIGINAL INCHANGÉ */}
-              {/* ... */}
+              <button onClick={() => setView('card')} className="flex items-center gap-2 text-green-600 font-semibold"><ArrowLeft className="h-5 w-5" />Retour</button>
+              <div className="text-center">
+                <div className="w-32 h-32 rounded-full mx-auto mb-4 overflow-hidden border-4 border-green-200"><MediaDisplay bucket="rencontres" path={currentProfile.image_url} alt={currentProfile.name} className="w-full h-full object-cover" /></div>
+                <h2 className="text-3xl font-bold text-gray-800">{currentProfile.name?.split(' ')[0]}, {currentProfile.age}</h2>
+                <div className="flex items-center justify-center gap-4 text-gray-500 text-sm mt-2">
+                  <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {currentProfile.ville?.nom || currentProfile.city}</span>
+                  <span className="flex items-center gap-1.5"><Briefcase className="h-4 w-4" /> {currentProfile.profession}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                 {currentProfile.bio && (
+                  <>
+                    <h3 className="font-bold text-lg text-gray-800">Bio</h3>
+                    <p className="text-gray-600 font-medium italic mb-2">{currentProfile.bio}</p>
+                  </>
+                )}
+                <h3 className="font-bold text-lg text-gray-800">À propos de moi</h3>
+                <p className="text-gray-600">{currentProfile.long_bio}</p>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-6 pt-2">
+                <DetailItem icon={User} label="Sexe" value={currentProfile.sexe} />
+                {currentProfile.show_taille && <DetailItem icon={Ruler} label="Taille" value={currentProfile.taille} />}
+                {currentProfile.show_poids && <DetailItem icon={Weight} label="Poids" value={currentProfile.poids} />}
+                {currentProfile.show_ethnie && <DetailItem icon={Users} label="Ethnie" value={currentProfile.ethnie} />}
+                <DetailItem icon={Cigarette} label="Fume" value={currentProfile.fume} />
+                <DetailItem icon={GlassWater} label="Bois" value={currentProfile.bois} />
+                <DetailItem icon={Baby} label="Enfant(s)" value={`${currentProfile.enfant}${currentProfile.enfant === 'Oui' && currentProfile.show_nombre_enfant ? ` (${currentProfile.nombre_enfant})` : ''}`} />
+                <DetailItem icon={Paintbrush} label="Tatouage(s)" value={currentProfile.tatouage} />
+                <DetailItem icon={Gem} label="Piercing(s)" value={currentProfile.piercing} />
+                <DetailItem icon={Film} label="Film préféré" value={currentProfile.film} />
+                <DetailItem icon={Tv} label="Série préférée" value={currentProfile.serie} />
+                <DetailItem icon={Music} label="Musique préférée" value={currentProfile.musique} />
+                <DetailItem icon={BookOpen} label="Livre préféré" value={currentProfile.livre} />
+                <DetailItem icon={GraduationCap} label="Niveau d'études" value={currentProfile.niveau_etudes} />
+                <DetailItem icon={Award} label="Secteur d'activité" value={currentProfile.secteur_activite} />
+                <ArrayDetailItem icon={Sparkles} label="Centres d'intérêt" values={currentProfile.centres_interet} />
+                <ArrayDetailItem icon={Languages} label="Langues parlées" values={currentProfile.langues_parlees} />
+                <ArrayDetailItem icon={Code} label="Compétences techniques" values={currentProfile.competences_techniques} />
+                <ArrayDetailItem icon={Users} label="Compétences humaines" values={currentProfile.competences_humaines} />
+              </div>
+
+              <div className="flex justify-around items-center pt-4">
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleAction(currentProfile.id, 'pass')} className="w-16 h-16 rounded-full flex items-center justify-center bg-gray-200"><X className="h-8 w-8 text-gray-600" /></motion.button>
+                <motion.button whileTap={{ scale: 0.9 }} onClick={() => handleAction(currentProfile.id, 'like')} className="w-20 h-20 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg"><Heart className="h-10 w-10 text-white" fill="white" /></motion.button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -363,4 +460,3 @@ const Rencontre = () => {
 };
 
 export default Rencontre;
-

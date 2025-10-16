@@ -1,21 +1,23 @@
-
 import { supabase } from '@/lib/customSupabaseClient';
 
-export async function canUserAccess(user, section, action = "read") {
+// ✅ Nouvelle version : utilise la bonne fonction RPC user_has_feature
+export async function canUserAccess(user, featureKey) {
   if (!user?.id) return false;
   try {
-    const { data, error } = await supabase.rpc("check_user_access", {
+    const { data, error } = await supabase.rpc('user_has_feature', {
+      p_feature_key: featureKey,
       p_user_id: user.id,
-      p_section: section,
-      p_action: action
     });
+
     if (error) {
-      console.error("Erreur check_user_access:", error.message);
+      console.error('Erreur user_has_feature:', error.message);
       return false;
     }
+
     return data === true;
   } catch (error) {
-    console.error("Erreur RPC check_user_access:", error.message);
+    console.error('Erreur RPC user_has_feature:', error.message);
     return false;
   }
 }
+

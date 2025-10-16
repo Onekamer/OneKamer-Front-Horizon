@@ -203,16 +203,24 @@ const Rencontre = () => {
   }, [user]);
 
   const fetchProfiles = useCallback(async () => {
-    if (!user || !myProfile) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
+  if (!user) {
+    setLoading(false);
+    return;
+  }
 
-    const { data: swipedUserIdsData } = await supabase
-      .from('rencontres_likes')
-      .select('liked_id')
-      .eq('liker_id', myProfile.id);
+  // ✅ Si l’utilisateur n’a pas encore de profil, on ne bloque pas la page
+  if (!myProfile) {
+    setLoading(false);
+    return;
+  }
+
+  setLoading(true);
+
+  const { data: swipedUserIdsData } = await supabase
+    .from('rencontres_likes')
+    .select('liked_id')
+    .eq('liker_id', myProfile.id);
+
       
     const swipedRencontreIds = swipedUserIdsData ? swipedUserIdsData.map(l => l.liked_id) : [];
 

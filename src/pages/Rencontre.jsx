@@ -178,7 +178,7 @@ const Rencontre = () => {
   // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
     if (user) {
-      canUserAccess(user, 'rencontre', 'interact').then(setCanInteract);
+      canUserAccess(user, 'rencontre', 'create').then(setCanInteract);
       canUserAccess(user, 'rencontre', 'view').then(setCanView);
     } else {
       setCanInteract(false);
@@ -325,9 +325,18 @@ const Rencontre = () => {
      return <div className="text-center p-8">Veuillez vous connecter pour accéder aux rencontres.</div>
   }
   
-  if (!myProfile) {
-    return <RencontreProfil />;
-  }
+  if (!myProfile && canView) {
+  return <RencontreProfil />;
+}
+
+if (!canView) {
+  return (
+    <div className="text-center p-8">
+      Accès restreint — cette fonctionnalité nécessite une connexion.
+    </div>
+  )
+}
+
 
   return (
     <>

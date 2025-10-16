@@ -160,6 +160,7 @@ const Rencontre = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [canInteract, setCanInteract] = useState(false);
+  const [accessReady, setAccessReady] = useState(false);
   const [canView, setCanView] = useState(false); // ✅ nouveau
 
   const { toast } = useToast();
@@ -188,6 +189,7 @@ const Rencontre = () => {
   } else {
     setCanInteract(false);
     setCanView(false);
+    setAccessReady(true);
   }
 }, [user]);
 
@@ -342,13 +344,18 @@ const Rencontre = () => {
   return <RencontreProfil />;
 }
 
+if (!accessReady) {
+  return null; // ⏳ attend la vérification avant d'afficher quoi que ce soit
+}
+
 if (!canView) {
   return (
     <div className="text-center p-8">
-      Accès restreint — cette fonctionnalité nécessite une connexion.
+      Accès restreint — cette fonctionnalité est réservée aux membres disposant d’un plan supérieur.
     </div>
-  )
+  );
 }
+
 
 
   return (

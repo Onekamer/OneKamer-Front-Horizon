@@ -178,17 +178,28 @@ const Rencontre = () => {
   // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
   const checkAccess = async () => {
+    setCanView(null); // ✅ ajout ici
+
     if (!user) {
       setCanInteract(false);
       setCanView(false);
       return;
     }
 
-    // 🔁 Attendre réellement la réponse Supabase avant d'afficher quoi que ce soit
     const [viewAccess, interactAccess] = await Promise.all([
       canUserAccess(user, 'rencontre', 'view'),
       canUserAccess(user, 'rencontre', 'interact')
     ]);
+
+    console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
+
+    setCanView(Boolean(viewAccess));
+    setCanInteract(Boolean(interactAccess));
+  };
+
+  checkAccess();
+}, [user]);
+
 
     console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
 

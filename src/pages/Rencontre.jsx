@@ -160,7 +160,6 @@ const Rencontre = () => {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [canInteract, setCanInteract] = useState(false);
-  const [accessReady, setAccessReady] = useState(false);
   const [canView, setCanView] = useState(false); // ✅ nouveau
 
   const { toast } = useToast();
@@ -178,20 +177,14 @@ const Rencontre = () => {
 
   // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
-  if (user) {
-    (async () => {
-      const canCreate = await canUserAccess(user, 'create_rencontre');
-      const canAccess = await canUserAccess(user, 'rencontre_access');
-      console.log('DEBUG ➤ canCreate:', canCreate, 'canAccess:', canAccess);
-      setCanInteract(canCreate);
-      setCanView(canAccess);
-    })();
-  } else {
-    setCanInteract(false);
-    setCanView(false);
-    setAccessReady(true);
-  }
-}, [user]);
+    if (user) {
+      canUserAccess(user, 'rencontre', 'interact').then(setCanInteract);
+      canUserAccess(user, 'rencontre', 'view').then(setCanView);
+    } else {
+      setCanInteract(false);
+      setCanView(false);
+    }
+  }, [user]);
 
 
   const fetchMyProfile = useCallback(async () => {
@@ -210,24 +203,16 @@ const Rencontre = () => {
   }, [user]);
 
   const fetchProfiles = useCallback(async () => {
-  if (!user) {
-    setLoading(false);
-    return;
-  }
+    if (!user || !myProfile) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
 
-  // ✅ Si l’utilisateur n’a pas encore de profil, on ne bloque pas la page
-  if (!myProfile) {
-    setLoading(false);
-    return;
-  }
-
-  setLoading(true);
-
-  const { data: swipedUserIdsData } = await supabase
-    .from('rencontres_likes')
-    .select('liked_id')
-    .eq('liker_id', myProfile.id);
-
+    const { data: swipedUserIdsData } = await supabase
+      .from('rencontres_likes')
+      .select('liked_id')
+      .eq('liker_id', myProfile.id);
       
     const swipedRencontreIds = swipedUserIdsData ? swipedUserIdsData.map(l => l.liked_id) : [];
 
@@ -340,23 +325,9 @@ const Rencontre = () => {
      return <div className="text-center p-8">Veuillez vous connecter pour accéder aux rencontres.</div>
   }
   
-  if (!myProfile && canView) {
-  return <RencontreProfil />;
-}
-
-if (!accessReady) {
-  return null; // ⏳ attend la vérification avant d'afficher quoi que ce soit
-}
-
-if (!canView) {
-  return (
-    <div className="text-center p-8">
-      Accès restreint — cette fonctionnalité est réservée aux membres disposant d’un plan supérieur.
-    </div>
-  );
-}
-
-
+  if (!myProfile) {
+    return <RencontreProfil />;
+  }
 
   return (
     <>

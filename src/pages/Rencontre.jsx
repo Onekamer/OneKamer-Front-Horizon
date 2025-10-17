@@ -176,7 +176,7 @@ const Rencontre = () => {
   }, []);
 
   // ✅ 2. Vérifications des accès selon le plan Supabase
-  useEffect(() => {
+useEffect(() => {
   const checkAccess = async () => {
     setCanView(null); // ✅ ajout ici
 
@@ -186,10 +186,22 @@ const Rencontre = () => {
       return;
     }
 
+    // 🔁 Attendre réellement la réponse Supabase avant d'afficher quoi que ce soit
     const [viewAccess, interactAccess] = await Promise.all([
       canUserAccess(user, 'rencontre', 'view'),
       canUserAccess(user, 'rencontre', 'interact')
     ]);
+
+    console.log("🔍 Accès rencontre → view:", viewAccess, "| interact:", interactAccess);
+
+    // ✅ Mise à jour de l'état une fois les deux réponses reçues
+    setCanView(Boolean(viewAccess));
+    setCanInteract(Boolean(interactAccess));
+  };
+
+  checkAccess(); // ✅ exécution de la fonction
+}, [user]); // ✅ fermeture correcte du hook
+
 
     console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
 

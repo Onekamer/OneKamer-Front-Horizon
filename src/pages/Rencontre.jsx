@@ -345,18 +345,18 @@ if (!user) {
   return <div className="text-center p-8">Veuillez vous connecter pour accéder aux rencontres.</div>;
 }
 
-if (canView === null || canView === undefined) {
-  return (
-    <div className="text-center p-8">
-      Chargement des accès en cours...
-    </div>
-  );
-}
-
 if (canView === false) {
   return (
     <div className="text-center p-8">
       Accès restreint — cette fonctionnalité est réservée aux membres disposant d’un forfait supérieur.
+    </div>
+  );
+}
+
+if (canView === null || canView === undefined) {
+  return (
+    <div className="text-center p-8">
+      Chargement des accès en cours...
     </div>
   );
 }

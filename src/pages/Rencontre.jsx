@@ -192,27 +192,6 @@ useEffect(() => {
       canUserAccess(user, 'rencontre', 'interact')
     ]);
 
-    console.log("🔍 Accès rencontre → view:", viewAccess, "| interact:", interactAccess);
-
-    // ✅ Mise à jour de l'état une fois les deux réponses reçues
-    setCanView(Boolean(viewAccess));
-    setCanInteract(Boolean(interactAccess));
-  };
-
-  checkAccess(); // ✅ exécution de la fonction
-}, [user]); // ✅ fermeture correcte du hook
-
-
-    console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
-
-    setCanView(Boolean(viewAccess));
-    setCanInteract(Boolean(interactAccess));
-  };
-
-  checkAccess();
-}, [user]);
-
-
     console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
 
     // ✅ Mise à jour de l'état une fois les deux réponses reçues

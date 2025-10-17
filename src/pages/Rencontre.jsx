@@ -207,7 +207,7 @@ useEffect(() => {
     if (!user) {
       setLoading(false);
       return;
-    };
+    }
     setLoading(true);
     const { data, error } = await supabase.from('rencontres').select('id').eq('user_id', user.id).single();
     if (data) {

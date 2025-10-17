@@ -177,14 +177,28 @@ const Rencontre = () => {
 
   // ✅ 2. Vérifications des accès selon le plan Supabase
   useEffect(() => {
-    if (user) {
-      canUserAccess(user, 'rencontre', 'interact').then(setCanInteract);
-      canUserAccess(user, 'rencontre', 'view').then(setCanView);
-    } else {
+  const checkAccess = async () => {
+    if (!user) {
       setCanInteract(false);
       setCanView(false);
+      return;
     }
-  }, [user]);
+
+    // 🔁 Attendre réellement la réponse Supabase avant d'afficher quoi que ce soit
+    const [viewAccess, interactAccess] = await Promise.all([
+      canUserAccess(user, 'rencontre', 'view'),
+      canUserAccess(user, 'rencontre', 'interact')
+    ]);
+
+    console.log("🔍 Accès rencontre → view:", viewAccess, " | interact:", interactAccess);
+
+    // ✅ Mise à jour de l'état une fois les deux réponses reçues
+    setCanView(Boolean(viewAccess));
+    setCanInteract(Boolean(interactAccess));
+  };
+
+  checkAccess();
+}, [user]);
 
 
   const fetchMyProfile = useCallback(async () => {

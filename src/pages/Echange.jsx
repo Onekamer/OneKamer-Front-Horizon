@@ -88,13 +88,13 @@ const DonationDialog = ({ post, user, profile, refreshBalance, children }) => {
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Envoyer
-            </Button>
-<AudioRecorder user={user} receiverId={activePeerId} onUpload={() => reloadMessages?.()} />
+  <Button type="submit" disabled={isSubmitting}>
+    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+    Envoyer
+  </Button>
 
-
+  <AudioRecorder user={user} receiverId={activePeerId} onUpload={() => reloadMessages?.()} />
+</DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

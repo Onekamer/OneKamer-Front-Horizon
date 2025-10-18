@@ -93,7 +93,7 @@ const DonationDialog = ({ post, user, profile, refreshBalance, children }) => {
     Envoyer
   </Button>
 
-  <AudioRecorder user={user} receiverId={activePeerId} onUpload={() => reloadMessages?.()} />
+  <AudioRecorder user={user} />
 </DialogFooter>
         </form>
       </DialogContent>

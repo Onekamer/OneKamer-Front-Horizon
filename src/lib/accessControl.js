@@ -32,13 +32,13 @@ export async function canUserAccess(user, section, action = "read") {
       if (action === 'interact') {
         const allowed = ['vip', 'admin'].includes(plan);
         console.log(allowed 
-          ? "✅ Accès autorisé → VIP/Admin peuvent interagir." 
+          ? "✅ Accès autorisé → VIP/Admin peuvent interagir."
           : "⛔ Accès refusé → Interactions réservées aux VIP/Admin.");
         return allowed;
       }
     }
 
-    // 3️⃣ Autres sections : on repasse par la fonction Supabase check_user_access
+    // 3️⃣ Autres sections : vérification via Supabase
     console.log(`🧠 Vérification via Supabase RPC check_user_access(${section}, ${action})...`);
     const { data, error } = await supabase.rpc("check_user_access", {
       p_user_id: user.id,
@@ -58,4 +58,3 @@ export async function canUserAccess(user, section, action = "read") {
     return false;
   }
 }
-

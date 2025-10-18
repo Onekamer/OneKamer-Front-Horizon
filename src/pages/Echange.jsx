@@ -12,6 +12,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Input } from '@/components/ui/input';
+import AudioRecorder from "@/components/AudioRecorder";
 import CreatePost from '@/components/posts/CreatePost';
 import {
   Dialog,
@@ -91,7 +92,9 @@ const DonationDialog = ({ post, user, profile, refreshBalance, children }) => {
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Envoyer
             </Button>
-          </DialogFooter>
+<AudioRecorder user={user} receiverId={activePeerId} onUpload={() => reloadMessages?.()} />
+
+
         </form>
       </DialogContent>
     </Dialog>
